@@ -4,11 +4,13 @@ require 'xcodeproj'
 
 module Pandan
   class Parser
-    attr_reader :workspace, :workspace_dir, :regex
+    attr_reader :workspace, :workspace_dir, :regex, :project
 
-    def initialize(workspace_path, filter)
-      @workspace_dir = File.dirname(workspace_path)
-      @workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
+    def initialize(workspace_path, project_path, filter)
+      @workspace_dir = File.dirname(workspace_path) if workspace_path
+      @workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path) if workspace_path
+
+      @project = Xcodeproj::Project.new(project_path) if project_path
       @regex = filter
       @regex ||= '.*' # Match everything
     end
@@ -30,7 +32,9 @@ module Pandan
     private
 
     def projects
-      all_project_paths = workspace.file_references.map(&:path)
+      all_project_paths = workspace.file_references.map(&:path) if workspace
+      all_project_paths = [project.path] if project
+
       all_project_paths.map do |project_path|
         Xcodeproj::Project.open(File.expand_path(project_path, @workspace_dir))
       end

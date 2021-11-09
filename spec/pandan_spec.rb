@@ -9,7 +9,7 @@ RSpec.describe Pandan do
 
   it 'graph resolves dependencies correctly' do
     use_fixture('xcworkspace_with_correct_dependency_graph') do
-      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil)
+      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil, nil)
       targets = parser.all_targets
       graph = Pandan::Graph.new(false)
       graph.add_target_info(targets)
@@ -21,7 +21,7 @@ RSpec.describe Pandan do
 
   it 'graph resolves dependencies correctly for single project' do
     use_fixture('xcworkspace_with_single_project') do
-      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil)
+      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil, nil)
       targets = parser.all_targets
       graph = Pandan::Graph.new(false)
       graph.add_target_info(targets)
@@ -33,7 +33,7 @@ RSpec.describe Pandan do
 
   it 'graph resolves inverse dependencies correctly' do
     use_fixture('xcworkspace_with_correct_dependency_graph') do
-      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil)
+      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil, nil)
       targets = parser.all_targets
       graph = Pandan::Graph.new(true)
       graph.add_target_info(targets)
@@ -45,7 +45,7 @@ RSpec.describe Pandan do
 
   it 'parser excludes terms correctly' do
     use_fixture('xcworkspace_with_correct_dependency_graph') do
-      parser = Pandan::Parser.new('SampleApp.xcworkspace', '^((?!Tests).)*$')
+      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil, '^((?!Tests).)*$')
       targets = parser.all_targets
       graph = Pandan::Graph.new(true)
       graph.add_target_info(targets)
@@ -57,7 +57,7 @@ RSpec.describe Pandan do
 
   it 'graph detects dependency cycle' do
     use_fixture('xcworkspace_with_dependency_cycle') do
-      parser = Pandan::Parser.new('SampleApp.xcworkspace', '^((?!Tests).)*$')
+      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil,'^((?!Tests).)*$')
       targets = parser.all_targets
       graph = Pandan::Graph.new(true)
       graph.add_target_info(targets)
@@ -69,7 +69,7 @@ RSpec.describe Pandan do
 
   it 'graph works with CocoaPods generated workspace' do
     use_fixture('xcworkspace_generated_by_cocoapods') do
-      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil)
+      parser = Pandan::Parser.new('SampleApp.xcworkspace', nil, nil)
       targets = parser.all_targets
       graph = Pandan::Graph.new(false)
       graph.add_target_info(targets)
@@ -82,7 +82,7 @@ RSpec.describe Pandan do
 
   it 'graph works with dependencies defined using build settings' do
     use_fixture('xcworkspace_using_only_build_settings') do
-      parser = Pandan::Parser.new('Sample.xcworkspace', nil)
+      parser = Pandan::Parser.new('Sample.xcworkspace', nil,nil)
       targets = parser.all_targets
       ld_flags_info = parser.other_linker_flags
       graph = Pandan::Graph.new(false)

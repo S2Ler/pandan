@@ -13,7 +13,8 @@ module Pandan
 
     def self.options
       [
-        ['--xcworkspace=path/to/workspace', 'If not set, Pandan will try to find a workspace'],
+        ['--xcworkspace=path/to/workspace', 'If this and xcproject not set, Pandan will try to find a workspace'],
+        ['--xcproject=path/to/project', 'Path to project'],
         ['--reverse', 'If set, pandan will output the targets that depend on the argument'],
         ['--implicit-dependencies', 'If set, pandan will look up for linker flags in all build configurations'],
         ['--comma-separated', 'If set, Pandan outputs a comma-separated list instead of multiple lines'],
@@ -28,7 +29,8 @@ module Pandan
     def initialize(argv)
       @target = argv.shift_argument
       @xcworkspace = argv.option('xcworkspace')
-      @xcworkspace ||= XCWorkspace.find_workspace
+      @xcproject = argv.option('xcproject')
+      @xcworkspace ||= XCWorkspace.find_workspace unless @xcproject
       @reverse = argv.flag?('reverse')
       @implicit_deps = argv.flag?('implicit-dependencies')
       @comma_separated = argv.flag?('comma-separated')
@@ -41,11 +43,13 @@ module Pandan
       super
       help! 'A target is required to retrieve the dependency information' unless @target
 
-      help! 'Could not find the workspace. Try setting it manually using the --xcworkspace option.' unless @xcworkspace
+      unless @xcworkspace || @xcproject
+        help! 'Could not find the workspace. Try setting it manually using the --xcworkspace option.'
+      end
     end
 
     def run
-      parser = Parser.new(@xcworkspace, @filter)
+      parser = Parser.new(@xcworkspace, @xcproject, @filter)
       graph = Graph.new(@reverse)
       targets = parser.all_targets
       graph.add_target_info(targets)

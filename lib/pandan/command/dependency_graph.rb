@@ -10,7 +10,8 @@ module Pandan
   class DependencyGraph < Command
     def self.options
       [
-        ['--xcworkspace=path/to/workspace', 'If not set, Pandan will try to find a workspace'],
+        ['--xcworkspace=path/to/workspace', 'If this and xcproject not set, Pandan will try to find a workspace'],
+        ['--xcproject=path/to/project', 'Path to project'],
         ['--graphviz', 'Outputs the dependency graph in GraphViz format'],
         ['--image', 'Outputs the dependency graph as a PNG image'],
         ['--filter=expression', 'If set, pandan will select all targets whose name match the regular expression']
@@ -23,7 +24,8 @@ module Pandan
 
     def initialize(argv)
       @xcworkspace = argv.option('xcworkspace')
-      @xcworkspace ||= XCWorkspace.find_workspace
+      @xcproject = argv.option('xcproject')
+      @xcworkspace ||= XCWorkspace.find_workspace unless @xcproject
       @save_gv = argv.flag?('graphviz')
       @save_png = argv.flag?('image')
       @filter = argv.option('filter')
@@ -33,7 +35,9 @@ module Pandan
 
     def validate!
       super
-      help! 'Could not find the workspace. Try setting it manually using the --xcworkspace option.' unless @xcworkspace
+      unless @xcworkspace || @xcproject
+        help! 'Could not find the workspace. Try setting it manually using the --xcworkspace or --xcproject option.'
+      end
 
       if `which tred`.empty?
         help! 'Pandan requires GraphViz to generate the dependency graph. '\
@@ -44,7 +48,7 @@ module Pandan
     end
 
     def run
-      parser = Parser.new(@xcworkspace, @filter)
+      parser = Parser.new(@xcworkspace, @xcproject, @filter)
       targets = parser.all_targets
       graph = Graph.new(false)
       graph.add_target_info(targets)
